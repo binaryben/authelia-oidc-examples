@@ -1,0 +1,3 @@
+node_modules/**
+authelia/*.pem
+authelia/db.sqlite
