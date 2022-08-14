@@ -1,3 +1,6 @@
 node_modules/**
 authelia/*.pem
 authelia/db.sqlite
+ca/
+traefik/certs
+package-lock.json
