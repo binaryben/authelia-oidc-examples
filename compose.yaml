@@ -67,8 +67,7 @@ services:
       - NODE_EXTRA_CA_CERTS=/ca/cert.pem
     env_file:
       - outline.env
-      - ./.local/secrets/OUTLINE_SECRET_KEY
-      - ./.local/secrets/OUTLINE_UTILS_SECRET
+      - ./.local/secrets/outline.env
     depends_on:
       - postgres
       - redis

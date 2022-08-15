@@ -11,18 +11,17 @@
     "prekeygen": "if [[ -f ./authelia/private.pem ]]; then rm ./authelia/*.pem; fi;",
     "keygen": "docker run --rm -u \"$(id -u):$(id -g)\" -v \"$(pwd)\":/keys authelia/authelia:latest authelia crypto pair rsa generate --bits 4096 --directory /keys",
     "postkeygen": "mv ./private.pem ./authelia/private.pem && mv ./public.pem ./authelia/public.pem",
-    
-    "gen-password": "docker run -rm authelia/authelia authelia hash-password",
 
     "secret-generator": "openssl rand -hex 32",
 
     "genjwt": "if [[ ! -f ./.local/secrets/JWT_SECRET ]]; then npm run --silent secret-generator -- > ./.local/secrets/JWT_SECRET; fi;",
     "gensession": "if [[ ! -f ./.local/secrets/SESSION_SECRET ]]; then npm run --silent secret-generator -- > ./.local/secrets/SESSION_SECRET; fi;",
     "genstorage": "if [[ ! -f ./.local/secrets/STORAGE_ENCRYPTION_KEY ]]; then npm run --silent secret-generator -- > ./.local/secrets/STORAGE_ENCRYPTION_KEY; fi;",
-    "genoutlinekey": "if [[ ! -f ./.local/secrets/OUTLINE_SECRET_KEY ]]; then npm run --silent secret-generator -- > ./.local/secrets/OUTLINE_SECRET_KEY; fi;",
-    "genoutlineutils": "if [[ ! -f ./.local/secrets/OUTLINE_UTILS_SECRET ]]; then npm run --silent secret-generator -- > ./.local/secrets/OUTLINE_UTILS_SECRET; fi;",
-    
-    "gen-secrets": "npm run genjwt && npm run gensession && npm run genstorage && npm run genoutlinekey && npm run genoutlineutils",
+    "genoutlinekey": "echo \"SECRET_KEY=$(npm run --silent secret-generator)\" >> ./.local/secrets/outline.env",
+    "genoutlineutils": "echo \"UTILS_SECRET=$(npm run --silent secret-generator)\" >> ./.local/secrets/outline.env",
+    "genoutline": "if [[ ! -f ./.local/secrets/outline.env ]]; then touch ./.local/secrets/outline.env && npm run genoutlinekey && npm run genoutlineutils; fi;",
+
+    "gen-secrets": "npm run genjwt && npm run gensession && npm run genstorage && npm run genoutline",
 
     "preinstall": "mkdir -p ./.local/logs/authelia ./.local/secrets",
     "postinstall": "npm run keygen && npm run certgen && npm run gen-secrets",
