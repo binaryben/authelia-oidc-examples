@@ -9,23 +9,30 @@
     "postcertgen": "mv ./ca.crt ./ca/cert.pem && mv ./ca.key ./ca/key.pem && mv ./cert.crt ./traefik/certs/cert.pem && mv ./cert.key ./traefik/certs/key.pem",
     
     "prekeygen": "if [[ -f ./authelia/private.pem ]]; then rm ./authelia/*.pem; fi;",
-    "keygen": "docker run -u \"$(id -u):$(id -g)\" -v \"$(pwd)\":/keys authelia/authelia:latest authelia crypto pair rsa generate --bits 4096 --directory /keys",
+    "keygen": "docker run --rm -u \"$(id -u):$(id -g)\" -v \"$(pwd)\":/keys authelia/authelia:latest authelia crypto pair rsa generate --bits 4096 --directory /keys",
     "postkeygen": "mv ./private.pem ./authelia/private.pem && mv ./public.pem ./authelia/public.pem",
     
-    "gen-password": "docker run authelia/authelia authelia hash-password",
+    "gen-password": "docker run -rm authelia/authelia authelia hash-password",
 
-    "secretgencmd": "openssl rand -hex 32",
-    "presecretgen": "if [[ ! -d ./secrets ]]; then mkdir ./secrets; fi;",
-    "secretgenjwt": "if [[ ! -f ./secrets/JWT_SECRET ]]; then npm run --silent secretgencmd -- > ./secrets/JWT_SECRET; fi;",
-    "secretgensession": "if [[ ! -f ./secrets/SESSION_SECRET ]]; then npm run --silent secretgencmd -- > ./secrets/SESSION_SECRET; fi;",
-    "secretgenstorage": "if [[ ! -f ./secrets/STORAGE_ENCRYPTION_KEY ]]; then npm run --silent secretgencmd -- > ./secrets/STORAGE_ENCRYPTION_KEY; fi;",
-    "secretgen": "npm run secretgenjwt && npm run secretgensession && npm run secretgenstorage",
+    "secret-generator": "openssl rand -hex 32",
 
-    "preinstall": "mkdir ./authelia/logs",
-    "postinstall": "npm run keygen",
+    "genjwt": "if [[ ! -f ./.local/secrets/JWT_SECRET ]]; then npm run --silent secret-generator -- > ./.local/secrets/JWT_SECRET; fi;",
+    "gensession": "if [[ ! -f ./.local/secrets/SESSION_SECRET ]]; then npm run --silent secret-generator -- > ./.local/secrets/SESSION_SECRET; fi;",
+    "genstorage": "if [[ ! -f ./.local/secrets/STORAGE_ENCRYPTION_KEY ]]; then npm run --silent secret-generator -- > ./.local/secrets/STORAGE_ENCRYPTION_KEY; fi;",
+    "genoutlinekey": "if [[ ! -f ./.local/secrets/OUTLINE_SECRET_KEY ]]; then npm run --silent secret-generator -- > ./.local/secrets/OUTLINE_SECRET_KEY; fi;",
+    "genoutlineutils": "if [[ ! -f ./.local/secrets/OUTLINE_UTILS_SECRET ]]; then npm run --silent secret-generator -- > ./.local/secrets/OUTLINE_UTILS_SECRET; fi;",
+    
+    "gen-secrets": "npm run genjwt && npm run gensession && npm run genstorage && npm run genoutlinekey && npm run genoutlineutils",
+
+    "preinstall": "mkdir -p ./.local/logs/authelia ./.local/secrets",
+    "postinstall": "npm run keygen && npm run certgen && npm run gen-secrets",
 
     "start:caddy": "docker compose -f compose.yaml -f caddy.yaml up -d",
-    "start:traefik": "docker compose -f compose.yaml -f traefik.yaml up -d"
+    "start:traefik": "docker compose -f compose.yaml -f traefik.yaml up -d",
+
+    "stop": "docker compose down && docker compose down",
+
+    "nuke": "rm -rf ./.local ./authelia/db.sqlite ./authelia/notification.txt ./authelia/*.pem ./ca ./s3 ./secrets ./package-lock.json ./node_modules ./traefik/certs"
   },
   "repository": {
     "type": "git",

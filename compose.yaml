@@ -2,11 +2,15 @@ version: '3.8'
 
 secrets:
   JWT_SECRET:
-    file: ${PWD}/secrets/JWT_SECRET
+    file: ${PWD}/.local/secrets/JWT_SECRET
   SESSION_SECRET:
-    file: ${PWD}/secrets/SESSION_SECRET
+    file: ${PWD}/.local/secrets/SESSION_SECRET
   STORAGE_ENCRYPTION_KEY:
-    file: ${PWD}/secrets/STORAGE_ENCRYPTION_KEY
+    file: ${PWD}/.local/secrets/STORAGE_ENCRYPTION_KEY
+  OUTLINE_SECRET_KEY:
+    file: ${PWD}/.local/secrets/OUTLINE_SECRET_KEY
+  OUTLINE_UTILS_SECRET:
+    file: ${PWD}/.local/secrets/OUTLINE_UTILS_SECRET
 
 networks:
   net:
@@ -18,6 +22,7 @@ services:
     container_name: authelia
     volumes:
       - ./authelia:/config
+      - ./.local/logs/authelia:/logs
     networks:
       - net
     expose:
@@ -36,44 +41,45 @@ services:
       - net
 
   postgres:
-      image: postgres
-      container_name: postgres
-      networks:
+    image: postgres
+    container_name: postgres
+    networks:
       - net
-      environment:
-        POSTGRES_PASSWORD: postgres
-        POSTGRES_DB: outline
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: outline
 
   s3:
-      image: lphoward/fake-s3
-      container_name: s3
-      networks:
-        - net
-      volumes:
-        - ./s3:/fakes3_root
+    image: lphoward/fake-s3
+    container_name: s3
+    networks:
+      - net
+    volumes:
+      - ./.local/s3:/fakes3_root
 
   outline:
-      image: outlinewiki/outline
-      container_name: outline
-      command: sh -c "yarn sequelize:migrate --env=production-ssl-disabled && yarn start"
-      networks:
-        - net
-      expose:
-        - 3000
-      volumes:
-        - ./ca:/ca
-      environment:
-        - NODE_EXTRA_CA_CERTS=/ca/cert.pem
-      env_file:
-        - outline.env
-      labels:
-        - 'traefik.enable=true'
-        - 'traefik.http.routers.outline.rule=Host(`outline.example.local`)'
-        - 'traefik.http.routers.outline.entrypoints=https'
-        - 'traefik.http.routers.outline.tls=true'
-        - 'traefik.http.routers.outline.tls.options=default'
-      depends_on:
-        - postgres
-        - redis
-        - s3
+    image: outlinewiki/outline
+    container_name: outline
+    command: sh -c "yarn sequelize:migrate --env=production-ssl-disabled && yarn start"
+    networks:
+      - net
+    expose:
+      - 3000
+    volumes:
+      - ./ca:/ca
+    environment:
+      - NODE_EXTRA_CA_CERTS=/ca/cert.pem
+    env_file:
+      - outline.env
+    secrets: [OUTLINE_SECRET_KEY, OUTLINE_UTILS_SECRET]
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.outline.rule=Host(`outline.example.local`)'
+      - 'traefik.http.routers.outline.entrypoints=https'
+      - 'traefik.http.routers.outline.tls=true'
+      - 'traefik.http.routers.outline.tls.options=default'
+    depends_on:
+      - postgres
+      - redis
+      - s3
 

@@ -1,6 +1,6 @@
 log:
   level: debug
-  file_path: /config/logs/authelia.%d.log
+  file_path: /logs/%d.log
   keep_stdout: true
 
 authentication_backend:
