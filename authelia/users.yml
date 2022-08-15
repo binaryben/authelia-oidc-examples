@@ -1,0 +1,18 @@
+
+# Note: Use LDAP in a production environment, but this is just a MVP/POC
+# Both users have the same password (Password123)
+
+users:
+  me:
+    displayname: "Admin User"
+    password: $argon2id$v=19$m=65536,t=3,p=4$eUI5bzlEa1BzZFFrcDgvOQ$uiSe/xzEu/8S5bpC9POXblDAx/+uBQ8lLriAxgwqzlU
+    email: admin@example.local
+    groups:
+      - admins
+      - member
+  you:
+    displayname: "General Member"
+    password: $argon2id$v=19$m=65536,t=3,p=4$eUI5bzlEa1BzZFFrcDgvOQ$uiSe/xzEu/8S5bpC9POXblDAx/+uBQ8lLriAxgwqzlU
+    email: user@example.local
+    groups:
+      - member

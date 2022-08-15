@@ -1,0 +1,43 @@
+{
+  "name": "authelia-oidc-examples",
+  "version": "1.0.0",
+  "description": "POC for implementing OIDC with Authelia",
+  "main": "index.js",
+  "scripts": {
+    "precertgen": "mkdir ./traefik/certs && mkdir ./ca",
+    "certgen": "mkcert create-ca && mkcert create-cert --domains example.local,*.example.local",
+    "postcertgen": "mv ./ca.crt ./ca/cert.pem && mv ./ca.key ./ca/key.pem && mv ./cert.crt ./traefik/certs/cert.pem && mv ./cert.key ./traefik/certs/key.pem",
+    
+    "prekeygen": "if [[ -f ./authelia/private.pem ]]; then rm ./authelia/*.pem; fi;",
+    "keygen": "docker run -u \"$(id -u):$(id -g)\" -v \"$(pwd)\":/keys authelia/authelia:latest authelia crypto pair rsa generate --bits 4096 --directory /keys",
+    "postkeygen": "mv ./private.pem ./authelia/private.pem && mv ./public.pem ./authelia/public.pem",
+    
+    "gen-password": "docker run authelia/authelia authelia hash-password",
+
+    "secretgencmd": "openssl rand -hex 32",
+    "presecretgen": "if [[ ! -d ./secrets ]]; then mkdir ./secrets; fi;",
+    "secretgenjwt": "if [[ ! -f ./secrets/JWT_SECRET ]]; then npm run --silent secretgencmd -- > ./secrets/JWT_SECRET; fi;",
+    "secretgensession": "if [[ ! -f ./secrets/SESSION_SECRET ]]; then npm run --silent secretgencmd -- > ./secrets/SESSION_SECRET; fi;",
+    "secretgenstorage": "if [[ ! -f ./secrets/STORAGE_ENCRYPTION_KEY ]]; then npm run --silent secretgencmd -- > ./secrets/STORAGE_ENCRYPTION_KEY; fi;",
+    "secretgen": "npm run secretgenjwt && npm run secretgensession && npm run secretgenstorage",
+
+    "preinstall": "mkdir ./authelia/logs",
+    "postinstall": "npm run keygen",
+
+    "start:caddy": "docker compose -f compose.yaml -f caddy.yaml up -d",
+    "start:traefik": "docker compose -f compose.yaml -f traefik.yaml up -d"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/binaryben/authelia-oidc-examples.git"
+  },
+  "author": "Benny Michaels <npm@bnry.be> (https://bnry.be)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/binaryben/authelia-oidc-examples/issues"
+  },
+  "homepage": "https://github.com/binaryben/authelia-oidc-examples#readme",
+  "dependencies": {
+    "mkcert": "^1.5.0"
+  }
+}

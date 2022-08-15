@@ -1,4 +1,12 @@
-version: '3.3'
+version: '3.8'
+
+secrets:
+  JWT_SECRET:
+    file: ${PWD}/secrets/JWT_SECRET
+  SESSION_SECRET:
+    file: ${PWD}/secrets/SESSION_SECRET
+  STORAGE_ENCRYPTION_KEY:
+    file: ${PWD}/secrets/STORAGE_ENCRYPTION_KEY
 
 networks:
   net:
@@ -12,15 +20,60 @@ services:
       - ./authelia:/config
     networks:
       - net
-    labels:
-      - 'traefik.enable=true'
-      - 'traefik.http.routers.authelia.rule=Host(`authelia.example.local`)'
-      - 'traefik.http.routers.authelia.entrypoints=https'
-      - 'traefik.http.routers.authelia.tls=true'
-      - 'traefik.http.routers.authelia.tls.options=default'
-      - 'traefik.http.middlewares.authelia.forwardauth.address=http://authelia:9091/api/verify?rd=https://authelia.example.local'
-      - 'traefik.http.middlewares.authelia.forwardauth.trustForwardHeader=true'
-      - 'traefik.http.middlewares.authelia.forwardauth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email'
     expose:
       - 9091
+    secrets: [JWT_SECRET, SESSION_SECRET, STORAGE_ENCRYPTION_KEY]
+    environment:
+      AUTHELIA_JWT_SECRET_FILE: /run/secrets/JWT_SECRET
+      AUTHELIA_SESSION_SECRET_FILE: /run/secrets/SESSION_SECRET
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/STORAGE_ENCRYPTION_KEY
     restart: unless-stopped
+
+  redis:
+    image: redis
+    container_name: redis
+    networks:
+      - net
+
+  postgres:
+      image: postgres
+      container_name: postgres
+      networks:
+      - net
+      environment:
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_DB: outline
+
+  s3:
+      image: lphoward/fake-s3
+      container_name: s3
+      networks:
+        - net
+      volumes:
+        - ./s3:/fakes3_root
+
+  outline:
+      image: outlinewiki/outline
+      container_name: outline
+      command: sh -c "yarn sequelize:migrate --env=production-ssl-disabled && yarn start"
+      networks:
+        - net
+      expose:
+        - 3000
+      volumes:
+        - ./ca:/ca
+      environment:
+        - NODE_EXTRA_CA_CERTS=/ca/cert.pem
+      env_file:
+        - outline.env
+      labels:
+        - 'traefik.enable=true'
+        - 'traefik.http.routers.outline.rule=Host(`outline.example.local`)'
+        - 'traefik.http.routers.outline.entrypoints=https'
+        - 'traefik.http.routers.outline.tls=true'
+        - 'traefik.http.routers.outline.tls.options=default'
+      depends_on:
+        - postgres
+        - redis
+        - s3
+

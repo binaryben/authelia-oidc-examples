@@ -1,6 +1,8 @@
 node_modules/**
-authelia/*.pem
-authelia/db.sqlite
+authelia/**
+!authelia/configuration.yml
+!authelia/users.yml
 ca/
 traefik/certs
 package-lock.json
+secrets/

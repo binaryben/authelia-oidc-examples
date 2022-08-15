@@ -1,0 +1,35 @@
+log:
+  level: debug
+  file_path: /config/logs/authelia.%d.log
+  keep_stdout: true
+
+authentication_backend:
+  file:
+    path: /config/users.yml
+
+access_control:
+  default_policy: deny
+  rules:
+    - domain: traefik.example.local
+      policy: one_factor
+
+session:
+  domain: example.local
+
+storage:
+  local:
+    path: /config/db.sqlite
+
+notifier:
+  filesystem:
+    filename: /config/notification.txt
+
+# identity_providers:
+#   oidc:
+#     hmac_secret: this_is_a_secret_abc123abc123abc
+#     issuer_private_key: |
+#       -----BEGIN RSA PRIVATE KEY----- 
+#       FilLth1SH3RE...
+#       -----END RSA PRIVATE KEY-----
+#     enable_client_debug_messages: true
+#     clients:
