@@ -8,7 +8,7 @@ users:
     password: $argon2id$v=19$m=65536,t=3,p=4$eUI5bzlEa1BzZFFrcDgvOQ$uiSe/xzEu/8S5bpC9POXblDAx/+uBQ8lLriAxgwqzlU
     email: admin@example.local
     groups:
-      - admins
+      - admin
       - member
   you:
     displayname: "General Member"
