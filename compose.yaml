@@ -2,15 +2,11 @@ version: '3.8'
 
 secrets:
   JWT_SECRET:
-    file: ${PWD}/.local/secrets/JWT_SECRET
+    file: ./.local/secrets/JWT_SECRET
   SESSION_SECRET:
-    file: ${PWD}/.local/secrets/SESSION_SECRET
+    file: ./.local/secrets/SESSION_SECRET
   STORAGE_ENCRYPTION_KEY:
-    file: ${PWD}/.local/secrets/STORAGE_ENCRYPTION_KEY
-  OUTLINE_SECRET_KEY:
-    file: ${PWD}/.local/secrets/OUTLINE_SECRET_KEY
-  OUTLINE_UTILS_SECRET:
-    file: ${PWD}/.local/secrets/OUTLINE_UTILS_SECRET
+    file: ./.local/secrets/STORAGE_ENCRYPTION_KEY
 
 networks:
   net:
@@ -71,13 +67,8 @@ services:
       - NODE_EXTRA_CA_CERTS=/ca/cert.pem
     env_file:
       - outline.env
-    secrets: [OUTLINE_SECRET_KEY, OUTLINE_UTILS_SECRET]
-    labels:
-      - 'traefik.enable=true'
-      - 'traefik.http.routers.outline.rule=Host(`outline.example.local`)'
-      - 'traefik.http.routers.outline.entrypoints=https'
-      - 'traefik.http.routers.outline.tls=true'
-      - 'traefik.http.routers.outline.tls.options=default'
+      - ./.local/secrets/OUTLINE_SECRET_KEY
+      - ./.local/secrets/OUTLINE_UTILS_SECRET
     depends_on:
       - postgres
       - redis

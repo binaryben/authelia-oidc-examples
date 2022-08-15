@@ -16,6 +16,14 @@ services:
       - 'traefik.http.middlewares.authelia.forwardauth.trustForwardHeader=true'
       - 'traefik.http.middlewares.authelia.forwardauth.authResponseHeaders=Remote-User,Remote-Groups,Remote-Name,Remote-Email'
 
+  outline:
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.outline.rule=Host(`outline.example.local`)'
+      - 'traefik.http.routers.outline.entrypoints=https'
+      - 'traefik.http.routers.outline.tls=true'
+      - 'traefik.http.routers.outline.tls.options=default'
+  
   traefik:
     image: traefik:2.8
     container_name: traefik
